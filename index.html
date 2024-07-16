@@ -34,18 +34,36 @@
             dy: 0,
             img: new Image()
         };
+        pacMan.img.src = 'path_to_your_pacman_image.jpg';  // Specify the path to your Pac-Man image
 
-        pacMan.img.src = 'image.jpg';  // Specify the path to your Pac-Man image
+        const walls = [
+            { x: 100, y: 100, width: 100, height: 20 },
+            { x: 300, y: 200, width: 200, height: 20 },
+            { x: 150, y: 300, width: 100, height: 20 }
+        ];
 
         const dots = [];
         for (let i = 20; i < canvas.width; i += 40) {
             for (let j = 20; j < canvas.height; j += 40) {
-                dots.push({x: i, y: j, radius: 5});
+                let blocked = walls.some(wall => 
+                    i >= wall.x && i <= wall.x + wall.width &&
+                    j >= wall.y && j <= wall.y + wall.height
+                );
+                if (!blocked) {
+                    dots.push({x: i, y: j, radius: 5});
+                }
             }
         }
 
         function drawPacMan() {
             context.drawImage(pacMan.img, pacMan.x - pacMan.radius, pacMan.y - pacMan.radius, pacMan.radius * 2, pacMan.radius * 2);
+        }
+
+        function drawWalls() {
+            walls.forEach(wall => {
+                context.fillStyle = 'gray';
+                context.fillRect(wall.x, wall.y, wall.width, wall.height);
+            });
         }
 
         function drawDots() {
@@ -67,15 +85,25 @@
             });
         }
 
-        function updatePacMan() {
-            pacMan.x += pacMan.dx;
-            pacMan.y += pacMan.dy;
+        function wallCollision(x, y) {
+            return walls.some(wall => 
+                x + pacMan.radius > wall.x && 
+                x - pacMan.radius < wall.x + wall.width && 
+                y + pacMan.radius > wall.y && 
+                y - pacMan.radius < wall.y + wall.height
+            );
+        }
 
-            // Check boundaries
-            if (pacMan.x - pacMan.radius < 0) pacMan.x = pacMan.radius;
-            if (pacMan.x + pacMan.radius > canvas.width) pacMan.x = canvas.width - pacMan.radius;
-            if (pacMan.y - pacMan.radius < 0) pacMan.y = pacMan.radius;
-            if (pacMan.y + pacMan.radius > canvas.height) pacMan.y = canvas.height - pacMan.radius;
+        function updatePacMan() {
+            let nextX = pacMan.x + pacMan.dx;
+            let nextY = pacMan.y + pacMan.dy;
+            
+            if (!wallCollision(nextX, pacMan.y)) {
+                pacMan.x = nextX;
+            }
+            if (!wallCollision(pacMan.x, nextY)) {
+                pacMan.y = nextY;
+            }
         }
 
         function clearCanvas() {
@@ -84,6 +112,7 @@
 
         function gameLoop() {
             clearCanvas();
+            drawWalls();
             drawDots();
             drawPacMan();
             checkCollisions();
