@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pac-Man</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: black;
+        }
+        canvas {
+            background-color: black;
+            border: 1px solid #000;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="600" height="400"></canvas>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const context = canvas.getContext('2d');
+
+        const pacMan = {
+            x: 50,
+            y: 150,
+            radius: 20,
+            speed: 2,
+            dx: 0,
+            dy: 0,
+            img: new Image()
+        };
+
+        pacMan.img.src = 'image.jpg';  // Specify the path to your Pac-Man image
+
+        const dots = [];
+        for (let i = 20; i < canvas.width; i += 40) {
+            for (let j = 20; j < canvas.height; j += 40) {
+                dots.push({x: i, y: j, radius: 5});
+            }
+        }
+
+        function drawPacMan() {
+            context.drawImage(pacMan.img, pacMan.x - pacMan.radius, pacMan.y - pacMan.radius, pacMan.radius * 2, pacMan.radius * 2);
+        }
+
+        function drawDots() {
+            dots.forEach(dot => {
+                context.beginPath();
+                context.arc(dot.x, dot.y, dot.radius, 0, 2 * Math.PI);
+                context.fillStyle = 'white';
+                context.fill();
+                context.closePath();
+            });
+        }
+
+        function checkCollisions() {
+            dots.forEach((dot, index) => {
+                let distance = Math.sqrt((dot.x - pacMan.x) ** 2 + (dot.y - pacMan.y) ** 2);
+                if (distance < pacMan.radius + dot.radius) {
+                    dots.splice(index, 1); // Remove the dot from the array
+                }
+            });
+        }
+
+        function updatePacMan() {
+            pacMan.x += pacMan.dx;
+            pacMan.y += pacMan.dy;
+
+            // Check boundaries
+            if (pacMan.x - pacMan.radius < 0) pacMan.x = pacMan.radius;
+            if (pacMan.x + pacMan.radius > canvas.width) pacMan.x = canvas.width - pacMan.radius;
+            if (pacMan.y - pacMan.radius < 0) pacMan.y = pacMan.radius;
+            if (pacMan.y + pacMan.radius > canvas.height) pacMan.y = canvas.height - pacMan.radius;
+        }
+
+        function clearCanvas() {
+            context.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function gameLoop() {
+            clearCanvas();
+            drawDots();
+            drawPacMan();
+            checkCollisions();
+            updatePacMan();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function changeDirection(event) {
+            const keyPressed = event.key;
+            switch (keyPressed) {
+                case 'ArrowUp':
+                    pacMan.dx = 0;
+                    pacMan.dy = -pacMan.speed;
+                    break;
+                case 'ArrowDown':
+                    pacMan.dx = 0;
+                    pacMan.dy = pacMan.speed;
+                    break;
+                case 'ArrowLeft':
+                    pacMan.dx = -pacMan.speed;
+                    pacMan.dy = 0;
+                    break;
+                case 'ArrowRight':
+                    pacMan.dx = pacMan.speed;
+                    pacMan.dy = 0;
+                    break;
+            }
+        }
+
+        document.addEventListener('keydown', changeDirection);
+
+        gameLoop();
+    </script>
+</body>
+</html>
